@@ -1,33 +1,51 @@
-local event = require "event"
-local cgpu = require "cgpu"
-local keyboard = require "keyboard"
+--CGPU Library, author nordway
+--A little library to make color drawings easier
 
-local args = {...}
+local component = require("component")
+local gpu = component.gpu
 
-if args[1] == nil or args[2] == nil then io.stderr:write("Too few arguments, expected two: HEX Color, HEX Color")
-  os.exit()
+local cgpu = {}
+
+w, h = gpu.getResolution()
+
+function cgpu.clear(char, fg, bg)
+  if fg ~= nil then gpu.setForeground(fg) end
+  if bg ~= nil then gpu.setBackground(bg) end
+  gpu.fill(1, 1, w, h, char)
 end
 
-cgpu.clear(" ", tonumber(args[1]), tonumber(args[2]))
-
-while true do
-  
-  if keyboard.isKeyDown(keyboard.keys.a) and keyboard.isControlDown() then
-    cgpu.clear(" ", tonumber(args[1]), tonumber(args[2]))
+function cgpu.set(xset, yset, char, fg, bg)
+  if fg ~= nil then
+    gpu.setForeground(fg)
   end
-
-  if keyboard.isKeyDown(keyboard.keys.w) and keyboard.isControlDown() then
-    cgpu.clear(" ", 0xFFFFFF, 0x000000)
-    os.exit()
+  if bg ~= nil then
+    gpu.setBackground(bg)
   end
+  gpu.set(xset, yset, char)
+end
 
-  name, address, x, y, button, player = event.pull()
-  if name == "drag" or name == "touch" then
-    x = (math.floor(x/2))*2
-    if button == 0 then
-      cgpu.fill(x, y, 2, 1, " ", nil, tonumber(args[1]))
-    else
-      cgpu.fill(x, y, 2, 1, " ", nil, tonumber(args[2]))
-    end
+function cgpu.drawLine(x0, y0, x1, y1, iter, char, fg, bg)
+  xi = (x1-x0)/iter
+  yi = (y1-y0)/iter
+  xc = x0
+  yc = y0
+  if fg ~= nil then gpu.setForeground(fg) end
+  if bg ~= nil then gpu.setBackground(bg) end
+  for i = 1, iter do  
+    gpu.set(xc, yc, char)
+    xc = xc + xi
+    yc = yc + yi
   end
 end
+
+function cgpu.fill(xfill, yfill, wid, hei, char, fg, bg)
+  if fg ~= nil then
+    gpu.setForeground(fg)
+  end
+  if bg ~= nil then
+    gpu.setBackground(bg)
+  end
+  gpu.fill(xfill, yfill, wid, hei, char)
+end
+
+return cgpu
